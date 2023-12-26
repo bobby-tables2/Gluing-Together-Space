@@ -7,6 +7,17 @@ using UnityEngine;
 [ExecuteInEditMode]
 public class GluingTogetherSpace : MonoBehaviour
 {
+    [Header("Make the planes work only on one side?")]
+    [SerializeField]
+    bool enableFrontSidePlane1 = true;
+    [SerializeField]
+    bool enableBackSidePlane1 = true;
+    [SerializeField]
+    bool enableFrontSidePlane2 = true;
+    [SerializeField]
+    bool enableBackSidePlane2 = true;
+
+    [Header("When an object enters a plane, it exits via the other")]
     [SerializeField]
     private GameObject plane1;
     [SerializeField]
@@ -54,13 +65,15 @@ public class GluingTogetherSpace : MonoBehaviour
             {
                 if(hitCollider.gameObject == plane1)
                 {
+                    //Debug.Log(plane1tfm.InverseTransformPoint(objtfm.position).z);
                     inplane1 = true;
-                    Debug.Log("Hit plane 1");
+                    //Debug.Log("Hit plane 1");
                 }
                 if(hitCollider.gameObject == plane2)
                 {
+                    //Debug.Log(plane2tfm.InverseTransformPoint(objtfm.position).z);
                     inplane2 = true;
-                    Debug.Log("Hit plane 2");
+                    //Debug.Log("Hit plane 2");
                 }
             }
 
@@ -101,10 +114,13 @@ public class GluingTogetherSpace : MonoBehaviour
                         out GameObject bodydouble);
 
                 // swap original object and body double
-                Transform bodydoubletfm = bodydouble.transform;
-
-                object_in_scene.transform.position = plane2tfm.TransformPoint(plane1tfm.InverseTransformPoint(objtfm.position));
-                object_in_scene.transform.rotation = bodydoubletfm.rotation;
+                if((enableFrontSidePlane1 && plane1tfm.InverseTransformPoint(objtfm.position).z > objtfm.lossyScale.magnitude) ||
+                       (enableBackSidePlane1 && plane1tfm.InverseTransformPoint(objtfm.position).z <= objtfm.lossyScale.magnitude) )
+                {
+                    Transform bodydoubletfm = bodydouble.transform;
+                    object_in_scene.transform.position = plane2tfm.TransformPoint(plane1tfm.InverseTransformPoint(objtfm.position));
+                    object_in_scene.transform.rotation = bodydoubletfm.rotation;
+                }
 
                 // deregister body double
                 T_object_plane_bodydouble.Remove(new Tuple<GameObject, GameObject>(object_in_scene, plane1));
@@ -154,10 +170,13 @@ public class GluingTogetherSpace : MonoBehaviour
                         out GameObject bodydouble);
 
                 // swap original object and body double
-                Transform bodydoubletfm = bodydouble.transform;
-                
-                object_in_scene.transform.position = plane1tfm.TransformPoint(plane2tfm.InverseTransformPoint(objtfm.position));
-                object_in_scene.transform.rotation = bodydoubletfm.rotation;
+                if((enableFrontSidePlane2 && plane2tfm.InverseTransformPoint(objtfm.position).z > objtfm.lossyScale.magnitude) ||
+                       (enableBackSidePlane2 && plane2tfm.InverseTransformPoint(objtfm.position).z <= objtfm.lossyScale.magnitude) )
+                {
+                    Transform bodydoubletfm = bodydouble.transform;
+                    object_in_scene.transform.position = plane1tfm.TransformPoint(plane2tfm.InverseTransformPoint(objtfm.position));
+                    object_in_scene.transform.rotation = bodydoubletfm.rotation;
+                }
 
                 // deregister body double
                 T_object_plane_bodydouble.Remove(new Tuple<GameObject, GameObject>(object_in_scene, plane2));
