@@ -28,16 +28,13 @@ public class GluingTogetherSpace : MonoBehaviour
     private string plane2name = "Gluing Together Plane 2";
     private string bodydoublename = "Body Double";
 
-    private Texture plane1tex2d;
-    private Texture plane2tex2d;
-
     private Dictionary<Tuple<GameObject, GameObject>, GameObject> T_object_plane_bodydouble = 
         new Dictionary<Tuple<GameObject, GameObject>, GameObject>();
 
     // Start is called before the first frame update
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
@@ -45,7 +42,7 @@ public class GluingTogetherSpace : MonoBehaviour
     {
         // generates portal texture for plane 1
         RenderTexture plane1tex = new RenderTexture(256, 256, 16, RenderTextureFormat.ARGB32);
-        plane1tex.Create();
+        //plane1tex.Create();
 
         Camera plane1cam = plane1.GetComponent<Camera>();
         RenderTexture.active = plane1tex;
@@ -53,14 +50,12 @@ public class GluingTogetherSpace : MonoBehaviour
         plane1cam.Render();
         RenderTexture.active = null;
 
-        plane1tex2d = new Texture2D(256, 256);
-        Graphics.CopyTexture(plane1tex, 0, 0, plane1tex2d, 0, 0);
-
+        plane2.GetComponent<MeshFilter>().GetComponent<MeshRenderer>().material.mainTexture = plane1tex;
         plane1tex.Release();
         
         // generates portal texture for plane 2
         RenderTexture plane2tex = new RenderTexture(256, 256, 16, RenderTextureFormat.ARGB32);
-        plane1tex.Create();
+        //plane1tex.Create();
 
         Camera plane2cam = plane2.GetComponent<Camera>();
 
@@ -69,15 +64,10 @@ public class GluingTogetherSpace : MonoBehaviour
         plane2cam.Render();
         RenderTexture.active = null;
 
-        plane2tex2d = new Texture2D(256, 256);
-        Graphics.CopyTexture(plane2tex, 0, 0, plane2tex2d, 0, 0);
-        
+        plane1.GetComponent<MeshFilter>().GetComponent<MeshRenderer>().material.mainTexture = plane2tex;
         plane2tex.Release();
 
-        // applies portal textures
-
-        plane1.GetComponent<MeshFilter>().GetComponent<MeshRenderer>().material.mainTexture = plane2tex2d;
-        plane2.GetComponent<MeshFilter>().GetComponent<MeshRenderer>().material.mainTexture = plane1tex2d;
+        Resources.UnloadUnusedAssets();
 
         //find all possible objects that could pass through one of the planes(portals)
         Rigidbody[] rigidbodies = GameObject.FindObjectsOfType<Rigidbody>();
