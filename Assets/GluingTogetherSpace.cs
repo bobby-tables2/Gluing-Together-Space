@@ -7,6 +7,10 @@ using UnityEngine;
 [ExecuteInEditMode]
 public class GluingTogetherSpace : MonoBehaviour
 {
+    [Header("Main camera for the portal texture effect")]
+    [SerializeField]
+    Camera mainCamera;
+
     [Header("Make the planes work only on one side?")]
     [SerializeField]
     bool enableFrontSidePlane1 = true;
@@ -40,31 +44,45 @@ public class GluingTogetherSpace : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
+        Transform plane1tfm = plane1.transform;
+        Transform plane2tfm = plane2.transform;
+        Transform camtfm = mainCamera.gameObject.transform;
+        
         // generates portal texture for plane 1
-        RenderTexture plane1tex = new RenderTexture(256, 256, 16, RenderTextureFormat.ARGB32);
-        //plane1tex.Create();
+        Vector3 new_cam_position = plane1tfm.TransformPoint(plane2tfm.InverseTransformPoint(camtfm.position));
+        Quaternion new_cam_rotation = camtfm.rotation * Quaternion.Inverse(plane1tfm.rotation) * plane2tfm.rotation;
 
-        Camera plane1cam = plane1.GetComponent<Camera>();
+        GameObject plane1camobj = plane1.transform.Find("Plane Camera").gameObject;
+        plane1camobj.transform.position = new_cam_position;
+        plane1camobj.transform.rotation = new_cam_rotation;
+
+        RenderTexture plane1tex = new RenderTexture(256, 256, 16, RenderTextureFormat.ARGB32);
+        Camera plane1cam = plane1camobj.GetComponent<Camera>();
         RenderTexture.active = plane1tex;
         plane1cam.targetTexture = plane1tex;
         plane1cam.Render();
         RenderTexture.active = null;
 
         plane2.GetComponent<MeshFilter>().GetComponent<MeshRenderer>().material.mainTexture = plane1tex;
-        plane1tex.Release();
         
         // generates portal texture for plane 2
+        new_cam_position = plane2tfm.TransformPoint(plane1tfm.InverseTransformPoint(camtfm.position));
+        new_cam_rotation = camtfm.rotation * Quaternion.Inverse(plane2tfm.rotation) * plane1tfm.rotation;
+
+        GameObject plane2camobj = plane2.transform.Find("Plane Camera").gameObject;
+        plane2camobj.transform.position = new_cam_position;
+        plane2camobj.transform.rotation = new_cam_rotation;
+
         RenderTexture plane2tex = new RenderTexture(256, 256, 16, RenderTextureFormat.ARGB32);
-        //plane1tex.Create();
-
-        Camera plane2cam = plane2.GetComponent<Camera>();
-
+        Camera plane2cam = plane2camobj.GetComponent<Camera>();
         RenderTexture.active = plane2tex;
         plane2cam.targetTexture = plane2tex;
         plane2cam.Render();
         RenderTexture.active = null;
 
         plane1.GetComponent<MeshFilter>().GetComponent<MeshRenderer>().material.mainTexture = plane2tex;
+        
+        plane1tex.Release();
         plane2tex.Release();
 
         Resources.UnloadUnusedAssets();
@@ -81,8 +99,8 @@ public class GluingTogetherSpace : MonoBehaviour
                 continue;
             }
 
-            Transform plane1tfm = plane1.transform;
-            Transform plane2tfm = plane2.transform;
+            //Transform plane1tfm = plane1.transform;
+            //Transform plane2tfm = plane2.transform;
             Transform objtfm = object_in_scene.transform;
 
             // is the GameObject inside either of the planes?
@@ -236,10 +254,12 @@ public class GluingTogetherSpace : MonoBehaviour
             plane1.GetComponent<MeshCollider>().convex = true;
             plane1.GetComponent<MeshCollider>().isTrigger = true;
 
-            plane1.AddComponent<Camera>();
-
             plane1.name = plane1name;
             plane1.transform.parent = this.transform;
+
+            GameObject plane1cam = new GameObject("Plane Camera");
+            plane1cam.AddComponent<Camera>();
+            plane1cam.transform.parent = plane1.transform;
         }
 
         //generates second plane only if not found
@@ -250,10 +270,12 @@ public class GluingTogetherSpace : MonoBehaviour
             plane2.GetComponent<MeshCollider>().convex = true;
             plane2.GetComponent<MeshCollider>().isTrigger = true;
 
-            plane2.AddComponent<Camera>();
-
             plane2.name = plane2name;
             plane2.transform.parent = this.transform;
+
+            GameObject plane2cam = new GameObject("Plane Camera");
+            plane2cam.AddComponent<Camera>();
+            plane2cam.transform.parent = plane2.transform;
         }
     }
 
