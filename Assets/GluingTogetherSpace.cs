@@ -28,6 +28,9 @@ public class GluingTogetherSpace : MonoBehaviour
     private string plane2name = "Gluing Together Plane 2";
     private string bodydoublename = "Body Double";
 
+    private Texture plane1tex2d;
+    private Texture plane2tex2d;
+
     private Dictionary<Tuple<GameObject, GameObject>, GameObject> T_object_plane_bodydouble = 
         new Dictionary<Tuple<GameObject, GameObject>, GameObject>();
 
@@ -40,6 +43,42 @@ public class GluingTogetherSpace : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
+        // generates portal texture for plane 1
+        RenderTexture plane1tex = new RenderTexture(256, 256, 16, RenderTextureFormat.ARGB32);
+        plane1tex.Create();
+
+        Camera plane1cam = plane1.GetComponent<Camera>();
+        RenderTexture.active = plane1tex;
+        plane1cam.targetTexture = plane1tex;
+        plane1cam.Render();
+        RenderTexture.active = null;
+
+        plane1tex2d = new Texture2D(256, 256);
+        Graphics.CopyTexture(plane1tex, 0, 0, plane1tex2d, 0, 0);
+
+        plane1tex.Release();
+        
+        // generates portal texture for plane 2
+        RenderTexture plane2tex = new RenderTexture(256, 256, 16, RenderTextureFormat.ARGB32);
+        plane1tex.Create();
+
+        Camera plane2cam = plane2.GetComponent<Camera>();
+
+        RenderTexture.active = plane2tex;
+        plane2cam.targetTexture = plane2tex;
+        plane2cam.Render();
+        RenderTexture.active = null;
+
+        plane2tex2d = new Texture2D(256, 256);
+        Graphics.CopyTexture(plane2tex, 0, 0, plane2tex2d, 0, 0);
+        
+        plane2tex.Release();
+
+        // applies portal textures
+
+        plane1.GetComponent<MeshFilter>().GetComponent<MeshRenderer>().material.mainTexture = plane2tex2d;
+        plane2.GetComponent<MeshFilter>().GetComponent<MeshRenderer>().material.mainTexture = plane1tex2d;
+
         //find all possible objects that could pass through one of the planes(portals)
         Rigidbody[] rigidbodies = GameObject.FindObjectsOfType<Rigidbody>();
 
@@ -60,7 +99,7 @@ public class GluingTogetherSpace : MonoBehaviour
             bool inplane1 = false;
             bool inplane2 = false;
 
-            Collider[] hitColliders = Physics.OverlapSphere(objtfm.position, objtfm.lossyScale.magnitude);
+            Collider[] hitColliders = Physics.OverlapSphere(objtfm.position, objtfm.localScale.magnitude);
             foreach (var hitCollider in hitColliders)
             {
                 if(hitCollider.gameObject == plane1)
@@ -182,12 +221,6 @@ public class GluingTogetherSpace : MonoBehaviour
                 T_object_plane_bodydouble.Remove(new Tuple<GameObject, GameObject>(object_in_scene, plane2));
                 // remove body double
                 DestroyImmediate(bodydouble);
-                
-
-                
-
-                //bodydouble.transform.position = objtfm.position;
-                //bodydouble.transform.position = objtfm.position;
             }
         }
         
@@ -213,6 +246,8 @@ public class GluingTogetherSpace : MonoBehaviour
             plane1.GetComponent<MeshCollider>().convex = true;
             plane1.GetComponent<MeshCollider>().isTrigger = true;
 
+            plane1.AddComponent<Camera>();
+
             plane1.name = plane1name;
             plane1.transform.parent = this.transform;
         }
@@ -224,6 +259,8 @@ public class GluingTogetherSpace : MonoBehaviour
 
             plane2.GetComponent<MeshCollider>().convex = true;
             plane2.GetComponent<MeshCollider>().isTrigger = true;
+
+            plane2.AddComponent<Camera>();
 
             plane2.name = plane2name;
             plane2.transform.parent = this.transform;
@@ -244,10 +281,6 @@ public class GluingTogetherSpace : MonoBehaviour
 
         Transform plane1tfm = plane1.transform;
         Transform plane2tfm = plane2.transform;
-
-        //gets the scale of the planes
-        Vector3 planeScale = plane1tfm.localScale;
-        plane2.transform.localScale = planeScale;
 
         //generates a primitive quad mesh
         Mesh quadMesh = new Mesh();
@@ -289,8 +322,8 @@ public class GluingTogetherSpace : MonoBehaviour
 
         //draw the planes in the editor
         Gizmos.DrawLine(plane1tfm.position, plane2tfm.position);
-        Gizmos.DrawWireMesh(quadMesh, plane1tfm.position, plane1tfm.rotation, planeScale);
-        Gizmos.DrawWireMesh(quadMesh, plane2tfm.position, plane2tfm.rotation, planeScale);
+        Gizmos.DrawWireMesh(quadMesh, plane1tfm.position, plane1tfm.rotation, plane1tfm.localScale);
+        Gizmos.DrawWireMesh(quadMesh, plane2tfm.position, plane2tfm.rotation, plane2tfm.localScale);
     }
 }
 
