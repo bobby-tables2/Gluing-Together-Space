@@ -42,6 +42,10 @@ public class GluingTogetherSpace : MonoBehaviour
     }
 
     // Update is called once per frame
+    void LateUpdate()
+    {
+        Resources.UnloadUnusedAssets();
+    }
     void FixedUpdate()
     {
         Transform plane1tfm = plane1.transform;
@@ -50,7 +54,7 @@ public class GluingTogetherSpace : MonoBehaviour
         
         // generates portal texture for plane 1
         Vector3 new_cam_position = plane1tfm.TransformPoint(plane2tfm.InverseTransformPoint(camtfm.position));
-        Quaternion new_cam_rotation = camtfm.rotation * Quaternion.Inverse(plane1tfm.rotation) * plane2tfm.rotation;
+        Quaternion new_cam_rotation = camtfm.rotation * Quaternion.Inverse(plane2tfm.rotation) * plane1tfm.rotation;
 
         GameObject plane1camobj = plane1.transform.Find("Plane Camera").gameObject;
         plane1camobj.transform.position = new_cam_position;
@@ -67,7 +71,7 @@ public class GluingTogetherSpace : MonoBehaviour
         
         // generates portal texture for plane 2
         new_cam_position = plane2tfm.TransformPoint(plane1tfm.InverseTransformPoint(camtfm.position));
-        new_cam_rotation = camtfm.rotation * Quaternion.Inverse(plane2tfm.rotation) * plane1tfm.rotation;
+        new_cam_rotation = camtfm.rotation * Quaternion.Inverse(plane1tfm.rotation) * plane2tfm.rotation;
 
         GameObject plane2camobj = plane2.transform.Find("Plane Camera").gameObject;
         plane2camobj.transform.position = new_cam_position;
@@ -82,10 +86,10 @@ public class GluingTogetherSpace : MonoBehaviour
 
         plane1.GetComponent<MeshFilter>().GetComponent<MeshRenderer>().material.mainTexture = plane2tex;
         
-        plane1tex.Release();
-        plane2tex.Release();
+        //plane1tex.Release();
+        //plane2tex.Release();
 
-        Resources.UnloadUnusedAssets();
+        //Resources.UnloadUnusedAssets();
 
         //find all possible objects that could pass through one of the planes(portals)
         Rigidbody[] rigidbodies = GameObject.FindObjectsOfType<Rigidbody>();
