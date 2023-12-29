@@ -672,7 +672,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0a805ed09942d4e9ca052deeec9e9ab3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  prefab_spawned: TempBall
+  prefab_spawned: {fileID: 2201162964252720219, guid: 5e2091d86da5c42728c97fa17e5b65fe, type: 3}
   position: {x: 0, y: 10, z: 0}
   spawning_limit: 200
 --- !u!4 &750936667
